@@ -22,22 +22,23 @@ import java.util.Random;
  */
 
 public class FishDrawable extends Drawable {
-	private static final String TAG = "Jcs_Fishsss";
-	private static final float HEAD_RADIUS = 50;
+	public static final float HEAD_RADIUS = 30;
+	public static final float TOTAL_LENGTH = 6.79f * HEAD_RADIUS;
 	protected static final float BODY_LENGHT = HEAD_RADIUS * 3.2f; //第一节身体长度
+	private static final String TAG = "Jcs_Fishsss";
 	private static final int BODY_ALPHA = 220;
 	private static final int OTHER_ALPHA = 160;
 	private static final int FINS_ALPHA = 100;
 	private static final int FINS_LEFT = 1;//左鱼鳍
 	private static final int FINS_RIGHT = -1;
 	private static final float FINS_LENGTH = HEAD_RADIUS * 1.3f;
-	public static final float TOTAL_LENGTH = 6.79f * HEAD_RADIUS;
-
+	//	private float mainAngle =90;//角度表示的角
+	protected ObjectAnimator finsAnimator;
 	private Paint mPaint;
+	private Context mContext;
 	//控制区域
 	private int currentValue = 0;//全局控制标志
-	private float mainAngle = 90;//角度表示的角
-	protected ObjectAnimator finsAnimator;
+	private float mainAngle = new Random().nextFloat() * 360;//角度表示的角
 	private float waveFrequence = 1;
 	//鱼头点
 	private PointF headPoint;
@@ -47,8 +48,27 @@ public class FishDrawable extends Drawable {
 	private Paint bodyPaint;
 	private Path mPath;
 
-	public FishDrawable() {
+	public FishDrawable(Context context) {
+		this.mContext = context;
 		init();
+	}
+
+	public static float getTotalLength() {
+		return TOTAL_LENGTH;
+	}
+
+	/**
+	 *  输入起点、长度、旋转角度计算终点
+	 * @param startPoint 起点
+	 * @param length 长度
+	 * @param angle 旋转角度
+	 * @return 计算结果点
+	 */
+	private static PointF calculatPoint(PointF startPoint, float length, float angle) {
+		float deltaX = (float) Math.cos(Math.toRadians(angle)) * length;
+		//符合Android坐标的y轴朝下的标准
+		float deltaY = (float) Math.sin(Math.toRadians(angle-180)) * length;
+		return new PointF(startPoint.x + deltaX, startPoint.y + deltaY);
 	}
 
 	private void init() {
@@ -67,6 +87,7 @@ public class FishDrawable extends Drawable {
 		bodyPaint.setStyle(Paint.Style.FILL);
 		bodyPaint.setDither(true);//防抖
 		bodyPaint.setColor(Color.argb(OTHER_ALPHA + 5, 244, 92, 71));
+//        middlePoint = new PointF(TOTAL_LENGTH + BODY_LENGHT / 2, TOTAL_LENGTH + BODY_LENGHT / 2);
 		middlePoint = new PointF(4.18f * HEAD_RADIUS, 4.18f * HEAD_RADIUS);
 
 		//鱼鳍灵动动画
@@ -84,6 +105,7 @@ public class FishDrawable extends Drawable {
 			@Override
 			public void onAnimationUpdate(ValueAnimator animation) {
 				currentValue = (int) (animation.getAnimatedValue());
+//				mainAngle = currentValue % 360;
 				invalidateSelf();
 			}
 		});
@@ -103,12 +125,12 @@ public class FishDrawable extends Drawable {
 	}
 
 	/**
-	 * 设置身体主轴线方向角度
+	 * 设置头的位置
 	 *
-	 * @param mainAngle
+	 * @param headPoint
 	 */
-	public void setMainAngle(float mainAngle) {
-		this.mainAngle = mainAngle;
+	public void setHeadPoint(PointF headPoint) {
+		this.headPoint = headPoint;
 	}
 
 	/**
@@ -121,29 +143,27 @@ public class FishDrawable extends Drawable {
 	}
 
 	/**
-	 * 设置头的位置
+	 * 设置身体主轴线方向角度
 	 *
-	 * @param headPoint
+	 * @param mainAngle
 	 */
-	public void setHeadPoint(PointF headPoint) {
-		this.headPoint = headPoint;
+	public void setMainAngle(float mainAngle) {
+		this.mainAngle = mainAngle;
 	}
 
 	public ObjectAnimator getFinsAnimator() {
 		return finsAnimator;
 	}
 
-	public void setMiddlePoint(PointF middlePoint) {
-		this.middlePoint = middlePoint;
-	}
-
 	public PointF getMiddlePoint() {
 		return middlePoint;
 	}
 
-	public static float getTotalLength() {
-		return TOTAL_LENGTH;
+	public void setMiddlePoint(PointF middlePoint) {
+		this.middlePoint = middlePoint;
 	}
+
+	//画身子
 
 	@Override
 	public void draw(Canvas canvas) {
@@ -155,8 +175,6 @@ public class FishDrawable extends Drawable {
 		mPath.reset();
 		mPaint.setColor(Color.argb(OTHER_ALPHA, 244, 92, 71));
 	}
-
-	//画身子
 
 	/**
 	 * 主方向是头到尾的方向跟X轴正方向的夹角（顺时针为正）
@@ -334,25 +352,9 @@ public class FishDrawable extends Drawable {
 		finsAngle = 45 * currentValue;
 	}
 
-
 	public void setWaveFrequence(float waveFrequence) {
 		this.waveFrequence = waveFrequence;
 	}
-
-	/**
-	 *  输入起点、长度、旋转角度计算终点
-	 * @param startPoint 起点
-	 * @param length 长度
-	 * @param angle 旋转角度
-	 * @return 计算结果点
-	 */
-	private static PointF calculatPoint(PointF startPoint, float length, float angle) {
-		float deltaX = (float) Math.cos(Math.toRadians(angle)) * length;
-        //符合Android坐标的y轴朝下的标准
-		float deltaY = (float) Math.sin(Math.toRadians(angle-180)) * length;
-		return new PointF(startPoint.x + deltaX, startPoint.y + deltaY);
-	}
-
 
 	@Override
 	public void setAlpha(int alpha) {
